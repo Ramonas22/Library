@@ -12,12 +12,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 
+
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 public class Main {
@@ -39,16 +35,8 @@ public class Main {
         //authorService.createAuthor(session);
         //bookService.createBook(session);
         //bookwormService.createBookworm(session);
-        rentService.createRent(session);
-
-
-
-        /*Date now = new SimpleDateFormat("yyyy-MM-dd").parse(LocalDate.now().toString());
-
-        System.out.println(now);
-        System.out.println(rentList.get(4).getEndDate());
-        Calendar callendar = Calendar.getInstance();
-        System.out.println(callendar.get(Calendar.YEAR) + "-" + callendar.get(Calendar.MONTH) + "-" + callendar.get(Calendar.DATE));*/
+        //rentService.createRent(session);
+        rentService.returnBook(session);
 
 
         //authorService.printAuthorList(authorList);

@@ -7,8 +7,6 @@ import org.hibernate.Session;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -38,6 +36,14 @@ public class RentService {
         System.out.println("Enter notes");
         rent.setNotes(scanner.nextLine());
 
+        System.out.println("Enter bookworm id");
+        for (int i = 0 ; i < bookworms.size();i++){
+            System.out.print("\n [" + (i+1) + "] ");
+            bookwormService.printBookworm(bookworms.get(i));
+        }
+        rent.setBookwormId(
+                bookworms.get(scanner.nextInt()-1));
+
         do {
             System.out.println("Enter book id");
             for (int i = 0; i < books.size(); i++) {
@@ -47,36 +53,28 @@ public class RentService {
             temp = scanner.nextInt() - 1;
             if (checkIfBookRented(books.get(temp),getRentList(session))) {
                 rent.setBook(books.get(temp));
+                temp = 1;
             } else {
+                System.out.println("Book is not available since it is rented");
                 temp = 0;
             }
-        }while (temp!=0);
-
-
-        System.out.println("Enter bookworm id");
-        for (int i = 0 ; i < bookworms.size();i++){
-            System.out.print("\n [" + (i+1) + "] ");
-            bookwormService.printBookworm(bookworms.get(i));
-            rent.setBookwormId(
-                    bookworms.get(scanner.nextInt()-1));
-        }
+        }while (temp==0);
 
         session.beginTransaction();
         session.save(rent);
         session.getTransaction().commit();
+
     }
 
     private boolean checkIfBookRented(Book book,List<Rent> rentList) throws ParseException {
-       //Date now = new SimpleDateFormat("yyyy-MM-dd").parse(String.valueOf(LocalDate.now()));
-        //Date now = new Date();
-        String now1 = String.valueOf(LocalDate.now());
-        //Date now = new SimpleDateFormat("yyyy-MM-dd").parse(now1);
-        Calendar callendar = Calendar.getInstance();
-        String now = callendar.get(Calendar.YEAR) + "-" + callendar.get(Calendar.MONTH) + "-" + callendar.get(Calendar.DATE);
+        Date todayDate= Date.from(java.time.ZonedDateTime.now().toInstant());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        String formatedDate = formatter.format(todayDate);
+        Date date1=new SimpleDateFormat("yyyy/MM/dd").parse(formatedDate);
 
         for (Rent rent: rentList
              ) {
-            if(rent.getBook().equals(book) && rent.getEndDate().before(new SimpleDateFormat("yyyy-MM-dd 00:00:00.0").parse(now))){
+            if(rent.getBook().equals(book) && rent.getEndDate().after(date1)){
                 return false;
             }
         }
@@ -97,5 +95,44 @@ public class RentService {
              ) {
             printRent(rent);
         }
+    }
+
+    public void returnBook(Session session) throws ParseException {
+        Scanner scanner = new Scanner(System.in);
+
+        RentService rentService = new RentService();
+
+        Date todayDate= Date.from(java.time.ZonedDateTime.now().toInstant());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        String formatedDate = formatter.format(todayDate);
+        Date date1=new SimpleDateFormat("yyyy/MM/dd").parse(formatedDate);
+
+        int temp;
+        List<Rent> rentList = rentService.getRentList(session);
+
+        do {
+            System.out.println("Pick rent that u want to end and return the book");
+            for (int i = 0; i < rentList.size(); i++) {
+                System.out.print("[ " + (i + 1) + " ]  ");
+                rentService.printRent(rentList.get(i));
+            }
+            temp = scanner.nextInt()-1;
+
+            if(temp>=0 && temp < rentList.size()){
+                System.out.println("I am doing smthg");
+                System.out.println(date1);
+                session.beginTransaction().begin();
+                session.createQuery("update Rent set end_date =:today_date where id =:id_to_correct")
+                        .setParameter("today_date", date1)
+                        .setParameter("id_to_correct", rentList.get(temp).getId()).executeUpdate();
+                session.getTransaction().commit();
+                temp =1;
+            }else {
+                temp = 0;
+                System.out.println("Index out of bounds try again");
+            }
+
+        }while (temp ==0);
+
     }
 }
